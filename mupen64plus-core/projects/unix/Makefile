@@ -99,25 +99,30 @@ endif
 ifneq ("$(filter arm%,$(HOST_CPU))","")
   ifeq ("$(filter arm%b,$(HOST_CPU))","")
     CPU := ARM
-    ARCH_DETECTED := 32BITS
     PIC ?= 1
     NEW_DYNAREC := 1
-    CFLAGS += -marm
-    ifneq ("$(filter armv5%,$(HOST_CPU))","")
-        CFLAGS += -DARMv5_ONLY
-        $(warning Using ARMv5_ONLY)
-    endif
-    ifneq ("$(filter armv6%,$(HOST_CPU))","")
-        CFLAGS += -DARMv5_ONLY
-        $(warning Using ARMv5_ONLY)
-    endif
-    ifeq ($(NEON), 1)
-        CFLAGS += -mfpu=neon -mfloat-abi=hard
+    ifneq ("$(filter arm64,$(HOST_CPU))","")
+      ARCH_DETECTED := 64BITS
+      $(warning Architecture "$(HOST_CPU)" not officially supported.)
     else
-      ifeq ($(VFP_HARD), 1)
-        CFLAGS += -mfpu=vfp -mfloat-abi=hard
+      ARCH_DETECTED := 32BITS
+      CFLAGS += -marm
+      ifneq ("$(filter armv5%,$(HOST_CPU))","")
+          CFLAGS += -DARMv5_ONLY
+          $(warning Using ARMv5_ONLY)
+      endif
+      ifneq ("$(filter armv6%,$(HOST_CPU))","")
+          CFLAGS += -DARMv5_ONLY
+          $(warning Using ARMv5_ONLY)
+      endif
+      ifeq ($(NEON), 1)
+          CFLAGS += -mfpu=neon -mfloat-abi=hard
       else
-        CFLAGS += -mfpu=vfp -mfloat-abi=softfp
+        ifeq ($(VFP_HARD), 1)
+          CFLAGS += -mfpu=vfp -mfloat-abi=hard
+        else
+          CFLAGS += -mfpu=vfp -mfloat-abi=softfp
+        endif
       endif
     endif
   endif
@@ -175,9 +180,19 @@ ifeq ($(ARCH_DETECTED), 64BITS_32)
   ifeq ($(OS), FREEBSD)
     $(error Do not use the BITS=32 option with FreeBSD, use -m32 and -m elf_i386)
   endif
-  ifneq ($(OS),OSX)
-    CFLAGS += -m32
-    LDFLAGS += -Wl,-m,elf_i386
+  ifneq ($(OS), OSX)
+    ifeq ($(OS), MINGW)
+      LDFLAGS += -Wl,-m,i386pe
+    else
+      CFLAGS += -m32
+      LDFLAGS += -Wl,-m,elf_i386
+    endif
+  endif
+endif
+
+ifeq ($(ARCH_DETECTED), 64BITS)
+  ifeq ($(OS), MINGW)
+    LDFLAGS += -Wl,-m,i386pep
   endif
 endif
 
@@ -230,12 +245,21 @@ ifeq ($(OS), OSX)
 	  LDFLAGS += -read_only_relocs suppress
     endif
   endif
+  ifeq ($(CPU), ARM)
+    # assembly compilation not yet supported on macOS with Apple Silicon
+    NO_ASM = 1
+    CFLAGS += -pipe -arch arm64 -mmacosx-version-min=10.16 -isysroot $(OSX_SDK_PATH)
+  endif
 endif
 ifeq ($(OS), MINGW)
   TARGET = mupen64plus$(POSTFIX).dll
-  LDFLAGS += -Wl,-Bsymbolic -shared -Wl,-export-all-symbols
-  # only export api symbols
-  LDFLAGS += -Wl,-version-script,$(SRCDIR)/api/api_export.ver
+  ifeq ($(CC), clang)
+    LDFLAGS += -shared -Wl,-export-all-symbols
+  else
+    LDFLAGS += -Wl,-Bsymbolic -shared -Wl,-export-all-symbols
+    # only export api symbols
+    LDFLAGS += -Wl,-version-script,$(SRCDIR)/api/api_export.ver
+  endif
   LDLIBS += -lpthread
   ifeq ($(ARCH_DETECTED), 64BITS)
     ASFLAGS = -f win64 -d WIN64
@@ -514,6 +538,7 @@ SOURCE = \
     $(SRCDIR)/device/cart/is_viewer.c \
     $(SRCDIR)/device/cart/sram.c \
     $(SRCDIR)/device/controllers/game_controller.c \
+    $(SRCDIR)/device/controllers/vru_controller.c \
     $(SRCDIR)/device/controllers/paks/biopak.c \
     $(SRCDIR)/device/controllers/paks/mempak.c \
     $(SRCDIR)/device/controllers/paks/rumblepak.c \
@@ -532,6 +557,7 @@ SOURCE = \
     $(SRCDIR)/device/r4300/cached_interp.c \
     $(SRCDIR)/device/r4300/cp0.c \
     $(SRCDIR)/device/r4300/cp1.c \
+    $(SRCDIR)/device/r4300/cp2.c \
     $(SRCDIR)/device/r4300/idec.c \
     $(SRCDIR)/device/r4300/interrupt.c \
     $(SRCDIR)/device/r4300/pure_interp.c \
@@ -676,6 +702,10 @@ ifeq ($(KEYBINDINGS), 0)
 	CFLAGS += -DNO_KEYBINDINGS
 endif
 
+ifeq ($(ACCURATE_FPU), 1)
+  CFLAGS += -DACCURATE_FPU_BEHAVIOR
+endif
+
 ifeq ($(DEBUGGER), 1)
   SOURCE += \
     $(SRCDIR)/debugger/dbg_debugger.c \
@@ -739,6 +769,7 @@ targets:
 	@echo "    NETPLAY=1      == Enable netplay functionality, requires SDL2_net"
 	@echo "    NEW_DYNAREC=1  == Replace dynamic recompiler with Ari64's experimental dynarec"
 	@echo "    KEYBINDINGS=0  == Disables the default keybindings"
+	@echo "    ACCURATE_FPU=1 == Enables accurate FPU behavior (i.e correct cause bits)"
 	@echo "    OPENCV=1       == Enable OpenCV support"
 	@echo "    POSTFIX=name   == String added to the name of the the build (default: '')"
 	@echo "  Install Options:"
@@ -779,7 +810,7 @@ uninstall:
 	$(RM) "$(DESTDIR)$(SHAREDIR)/mupencheat.txt"
 
 clean:
-	$(RM) -r $(TARGET) $(SONAME) $(OBJDIR) $(SRCDIR)/asm_defines/asm_defines_*
+	$(RM) -r $(TARGET) $(SONAME) _obj $(OBJDIR) $(SRCDIR)/asm_defines/asm_defines_*
 
 # build dependency files
 CFLAGS += -MD -MP

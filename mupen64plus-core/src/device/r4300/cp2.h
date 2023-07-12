@@ -1,7 +1,7 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
- *   Mupen64plus - mempak.h                                                *
+ *   Mupen64plus - cp2.h                                                   *
  *   Mupen64Plus homepage: https://mupen64plus.org/                        *
- *   Copyright (C) 2014 Bobby Smiles                                       *
+ *   Copyright (C) 2002 Hacktarux                                          *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -19,36 +19,27 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef M64P_DEVICE_SI_MEMPAK_H
-#define M64P_DEVICE_SI_MEMPAK_H
+#ifndef M64P_DEVICE_R4300_CP2_H
+#define M64P_DEVICE_R4300_CP2_H
 
-#include <stddef.h>
 #include <stdint.h>
+#include "osal/preproc.h"
+#include "new_dynarec/new_dynarec.h"
 
-struct storage_backend_interface;
-
-#define DEFAULT_MEMPAK_DEVICEID UINT16_C(0x0001)
-#define DEFAULT_MEMPAK_BANKS    UINT8_C(0x01)
-#define DEFAULT_MEMPAK_VERSION  UINT8_C(0x00)
-
-struct mempak
+struct cp2
 {
-    void* storage;
-    const struct storage_backend_interface* istorage;
+    uint64_t latch;
+
+#ifdef NEW_DYNAREC
+    /* New dynarec uses a different memory layout */
+    struct new_dynarec_hot_state* new_dynarec_hot_state;
+#endif
 };
 
-enum { MEMPAK_SIZE = 0x8000 };
+void init_cp2(struct cp2* cp2, struct new_dynarec_hot_state* new_dynarec_hot_state);
+void poweron_cp2(struct cp2* cp2);
 
-void format_mempak(uint8_t* mem,
-    const uint32_t serial[6],
-    uint16_t device_id,
-    uint8_t banks,
-    uint8_t version);
+uint64_t* r4300_cp2_latch(struct cp2* cp2);
 
-void init_mempak(struct mempak* mpk,
-                 void* storage,
-                 const struct storage_backend_interface* istorage);
+#endif /* M64P_DEVICE_R4300_CP2_H */
 
-extern const struct pak_interface g_imempak;
-
-#endif

@@ -2302,7 +2302,7 @@ static void tlb_speed_hacks()
   {
     u_int addr;
     int n;
-    switch (ROM_HEADER.Country_code&0xFF)
+    switch (ROM_HEADER.Country_code)
     {
       case 0x45: // U
         addr=0x34b30;
@@ -5415,7 +5415,7 @@ static void cop1_assemble(int i,struct regstat *i_regs)
     signed char fs=get_reg(i_regs->regmap,FSREG);
     if(tl>=0) {
       u_int copr=(source[i]>>11)&0x1f;
-      if(copr==0) emit_readword((intptr_t)&g_dev.r4300.new_dynarec_hot_state.fcr0,tl);
+      if(copr==0) emit_readword((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr0,tl);
       if(copr==31)
       {
           if(fs>=0) emit_mov(fs,tl);
