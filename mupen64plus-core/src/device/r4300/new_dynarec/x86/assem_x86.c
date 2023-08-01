@@ -3200,8 +3200,7 @@ static void fconv_assemble_x86(int i,struct regstat *i_regs)
   if(opcode2[i]==0x14&&(source[i]&0x3f)==0x20) {
     emit_pushmem((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>> 6)&0x1f]);
     emit_pushmem((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>11)&0x1f]);
-    if(fs>=0) emit_pushreg(fs);
-    else emit_pushmem((int)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31);
+    emit_pushimm((int)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31);
     emit_call((int)cvt_s_w);
     emit_addimm(ESP,12,ESP);
   }
@@ -3214,16 +3213,14 @@ static void fconv_assemble_x86(int i,struct regstat *i_regs)
   if(opcode2[i]==0x15&&(source[i]&0x3f)==0x20) {
     emit_pushmem((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>> 6)&0x1f]);
     emit_pushmem((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>11)&0x1f]);
-    if(fs>=0) emit_pushreg(fs);
-    else emit_pushmem((int)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31);
+    emit_pushimm((int)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31);
     emit_call((int)cvt_s_l);
     emit_addimm(ESP,12,ESP);
   }
   if(opcode2[i]==0x15&&(source[i]&0x3f)==0x21) {
     emit_pushmem((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>> 6)&0x1f]);
     emit_pushmem((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>11)&0x1f]);
-    if(fs>=0) emit_pushreg(fs);
-    else emit_pushmem((int)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31);
+    emit_pushimm((int)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31);
     emit_call((int)cvt_d_l);
     emit_addimm(ESP,12,ESP);
   }
@@ -3237,16 +3234,14 @@ static void fconv_assemble_x86(int i,struct regstat *i_regs)
   if(opcode2[i]==0x10&&(source[i]&0x3f)==0x24) {
     emit_pushmem((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>> 6)&0x1f]);
     emit_pushmem((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>11)&0x1f]);
-    if(fs>=0) emit_pushreg(fs);
-    else emit_pushmem((int)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31);
+    emit_pushimm((int)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31);
     emit_call((int)cvt_w_s);
     emit_addimm(ESP,12,ESP);
   }
   if(opcode2[i]==0x10&&(source[i]&0x3f)==0x25) {
     emit_pushmem((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>> 6)&0x1f]);
     emit_pushmem((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>11)&0x1f]);
-    if(fs>=0) emit_pushreg(fs);
-    else emit_pushmem((int)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31);
+    emit_pushimm((int)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31);
     emit_call((int)cvt_l_s);
     emit_addimm(ESP,12,ESP);
   }
@@ -3254,24 +3249,21 @@ static void fconv_assemble_x86(int i,struct regstat *i_regs)
   if(opcode2[i]==0x11&&(source[i]&0x3f)==0x20) {
     emit_pushmem((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>> 6)&0x1f]);
     emit_pushmem((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>11)&0x1f]);
-    if(fs>=0) emit_pushreg(fs);
-    else emit_pushmem((int)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31);
+    emit_pushimm((int)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31);
     emit_call((int)cvt_s_d);
     emit_addimm(ESP,12,ESP);
   }
   if(opcode2[i]==0x11&&(source[i]&0x3f)==0x24) {
     emit_pushmem((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>> 6)&0x1f]);
     emit_pushmem((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>11)&0x1f]);
-    if(fs>=0) emit_pushreg(fs);
-    else emit_pushmem((int)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31);
+    emit_pushimm((int)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31);
     emit_call((int)cvt_w_d);
     emit_addimm(ESP,12,ESP);
   }
   if(opcode2[i]==0x11&&(source[i]&0x3f)==0x25) {
     emit_pushmem((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>> 6)&0x1f]);
     emit_pushmem((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>11)&0x1f]);
-    if(fs>=0) emit_pushreg(fs);
-    else emit_pushmem((int)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31);
+    emit_pushimm((int)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31);
     emit_call((int)cvt_l_d);
     emit_addimm(ESP,12,ESP);
   }
@@ -3630,10 +3622,7 @@ static void float_assemble(int i,struct regstat *i_regs)
     if((source[i]&0x3f)<4)
       emit_pushmem((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>16)&0x1f]);
     emit_pushmem((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_simple[(source[i]>>11)&0x1f]);
-    if((source[i]&0x3f)<=4) {
-      if(fs>=0) emit_pushreg(fs);
-      else emit_pushmem((int)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31);
-    }
+    emit_pushimm((int)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31);
     switch(source[i]&0x3f)
     {
       case 0x00:
@@ -3677,11 +3666,7 @@ static void float_assemble(int i,struct regstat *i_regs)
     if((source[i]&0x3f)<4)
       emit_pushmem((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>16)&0x1f]);
     emit_pushmem((intptr_t)&g_dev.r4300.new_dynarec_hot_state.cp1_regs_double[(source[i]>>11)&0x1f]);
-    if((source[i]&0x3f)<=4)
-    {
-      if(fs>=0) emit_pushreg(fs);
-      else emit_pushmem((int)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31);
-    }
+    emit_pushimm((int)&g_dev.r4300.new_dynarec_hot_state.cp1_fcr31);
     switch(source[i]&0x3f)
     {
       case 0x00:
